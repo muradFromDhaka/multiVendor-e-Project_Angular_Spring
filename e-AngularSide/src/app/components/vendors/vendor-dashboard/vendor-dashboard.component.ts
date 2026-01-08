@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { OrderResponse } from 'src/app/models/order.model';
 import { ProductResponse } from 'src/app/models/product.model';
 import { VendorResponse } from 'src/app/models/vendor.model';
+import { OrderService } from 'src/app/services/order.service';
 import { ProductService } from 'src/app/services/product.service';
 import { VendorService } from 'src/app/services/vendor.service';
 
@@ -19,11 +21,8 @@ export class VendorDashboardComponent implements OnInit {
 
    vendor!: VendorResponse;
 
-  orders = [
-    { id: '#1021', customer: 'John Doe', date: '2026-01-02', status: 'Pending', total: 120 },
-    { id: '#1020', customer: 'Jane Smith', date: '2026-01-01', status: 'Delivered', total: 250 },
-    { id: '#1019', customer: 'Mark Lee', date: '2025-12-30', status: 'Cancelled', total: 80 }
-  ];
+  orders: OrderResponse[] = [];
+   
 
   products!: ProductResponse[];
 
@@ -34,10 +33,12 @@ export class VendorDashboardComponent implements OnInit {
     private router: Router,
     private producService: ProductService,
     private vendorServie: VendorService,
+    private orderService: OrderService,
   ){}
   ngOnInit(): void {
     this.loadVendor();
     this.loadProducts();
+    this.loadOrders();
   }
 
    loadVendor() {
@@ -49,6 +50,11 @@ export class VendorDashboardComponent implements OnInit {
       .subscribe(res => this.products = res);
   }
 
+
+  loadOrders() {
+    this.orderService.getMyVendorOrders()
+      .subscribe(res => this.orders = res);
+  }
 
 
   selectTab(tab: string) {
@@ -84,7 +90,6 @@ export class VendorDashboardComponent implements OnInit {
 
   editProduct(product: any) {
     this.editingProduct = product;
-    this.productForm = { ...product };
     this.modalOpen = true;
   }
 

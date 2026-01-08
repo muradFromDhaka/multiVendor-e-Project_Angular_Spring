@@ -1,10 +1,12 @@
 package com.abc.SpringSecurityExample.service;
 
-import com.abc.SpringSecurityExample.DTOs.projectDtos.VendorRequestDto;
-import com.abc.SpringSecurityExample.DTOs.projectDtos.VendorResponseDto;
-import com.abc.SpringSecurityExample.entity.User;
+import com.abc.SpringSecurityExample.DTOs.projectDtos.*;
+import com.abc.SpringSecurityExample.entity.OrderItem;
 import com.abc.SpringSecurityExample.entity.Vendor;
+import com.abc.SpringSecurityExample.entity.User;
+import com.abc.SpringSecurityExample.mapper.OrderMapper;
 import com.abc.SpringSecurityExample.mapper.VendorMapper;
+import com.abc.SpringSecurityExample.repository.OrderItemRepository;
 import com.abc.SpringSecurityExample.repository.UserRepository;
 import com.abc.SpringSecurityExample.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class VendorService {
 
     private final VendorRepository vendorRepository;
     private final UserRepository userRepository;
+    private final OrderItemRepository orderItemRepository;
 
     // ---------------- CREATE ----------------
     public VendorResponseDto createVendor(VendorRequestDto dto) {
@@ -35,7 +38,7 @@ public class VendorService {
         Vendor vendor = VendorMapper.toEntity(dto, null);
         vendor.setUser(user);
 
-        // generate slug
+        // TODO: Implement your SlugUtil
         String baseSlug = SlugUtil.toSlug(dto.getShopName());
         String slug = baseSlug;
         int count = 1;
@@ -85,13 +88,34 @@ public class VendorService {
 
     // ---------------- GET VENDOR BY LOGGED-IN USER ----------------
     public VendorResponseDto getMyVendor() {
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findById(userName)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Vendor vendor = vendorRepository.findByUserUserName(user.getUserName())
-                .orElseThrow(() -> new RuntimeException("Vendor not found for this user"));
-
+        Vendor vendor = getLoggedInVendor();
         return VendorMapper.toDto(vendor);
     }
+
+    // ---------------- GET LOGGED-IN VENDOR ----------------
+    public Vendor getLoggedInVendor() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return vendorRepository.findByUserUserName(username)
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+    }
+
+    // ---------------- GET ALL ORDER ITEMS OF LOGGED-IN VENDOR ----------------
+    public List<OrderItemResponseDTO> getMyOrderItems() {
+        Vendor vendor = getLoggedInVendor();
+        return orderItemRepository.findByVendor(vendor)
+                .stream()
+                .map(OrderMapper::mapOrderItemToDto)
+                .collect(Collectors.toList());
+    }
+
+
+    // ---------------- GET ALL ORDERS OF LOGGED-IN VENDOR ----------------
+    public List<OrderResponseDto> getMyOrders() {
+        Vendor vendor = getLoggedInVendor();
+        return orderItemRepository.findOrdersByVendorId(vendor.getId())
+                .stream()
+                .map(OrderMapper::toOrderResponseDto) // Order → OrderResponseDto
+                .collect(Collectors.toList());
+    }
+
 }

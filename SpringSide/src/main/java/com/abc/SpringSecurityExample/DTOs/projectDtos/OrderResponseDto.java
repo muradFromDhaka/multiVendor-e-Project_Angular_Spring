@@ -13,10 +13,13 @@ import java.util.List;
 @Builder
 public class OrderResponseDto {
 
-    private Long orderId;
+
+    private Long id;
     private String userName;
-    private List<OrderItemDto> orderItems;
     private BigDecimal totalPrice;
-    private OrderStatus orderStatus;
+    private String orderStatus;
+    private List<OrderItemResponseDTO> items;
+
+
 }
 

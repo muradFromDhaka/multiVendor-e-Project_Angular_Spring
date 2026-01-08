@@ -1,7 +1,11 @@
 package com.abc.SpringSecurityExample.Controller;
 
+import com.abc.SpringSecurityExample.DTOs.projectDtos.OrderItemResponseDTO;
+import com.abc.SpringSecurityExample.DTOs.projectDtos.OrderResponseDto;
 import com.abc.SpringSecurityExample.DTOs.projectDtos.VendorRequestDto;
 import com.abc.SpringSecurityExample.DTOs.projectDtos.VendorResponseDto;
+import com.abc.SpringSecurityExample.entity.Order;
+import com.abc.SpringSecurityExample.entity.OrderItem;
 import com.abc.SpringSecurityExample.service.VendorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -57,5 +61,17 @@ public class VendorController {
     public ResponseEntity<VendorResponseDto> getMyVendor() {
         VendorResponseDto dto = vendorService.getMyVendor();
         return ResponseEntity.ok(dto);
+    }
+
+    // 🔹 Logged-in vendor এর order items
+    @GetMapping("/me/order-items")
+    public ResponseEntity<List<OrderItemResponseDTO>> myOrderItems() {
+        return ResponseEntity.ok(vendorService.getMyOrderItems());
+    }
+
+    // 🔹 Logged-in vendor এর orders
+    @GetMapping("/me/orders")
+    public ResponseEntity<List<OrderResponseDto>> myOrders() {
+        return ResponseEntity.ok(vendorService.getMyOrders());
     }
 }

@@ -19,14 +19,11 @@ import java.util.List;
 public class Order extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_name", referencedColumnName = "userName", nullable = false)
     private User user;
 
-    @OneToMany(
-        mappedBy = "order",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties
     private List<OrderItem> orderItems;
 
     @Column(nullable = false, precision = 12, scale = 2)

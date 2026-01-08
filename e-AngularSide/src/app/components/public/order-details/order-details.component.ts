@@ -20,7 +20,7 @@ export class OrderDetailsComponent {
 
   ngOnInit() {
     const orderId = this.acRouter.snapshot.params['id'];
-    this.orderService.getOrder(orderId).subscribe(order => this.order = order);
+    this.orderService.getOrderById(orderId).subscribe(order => this.order = order);
   }
 
   close(){

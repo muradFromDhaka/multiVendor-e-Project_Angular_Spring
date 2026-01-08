@@ -1,5 +1,7 @@
 package com.abc.SpringSecurityExample.DTOs.projectDtos;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -9,13 +11,18 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderItemDto {
+public class OrderItemRequestDTO {
 
+    @NotNull
     private Long productId;
-    private String productName;
-    private Long vendorId;
-    private String vendorName;
-    private int quantity;
-    private BigDecimal unitPrice;
-}
 
+    @NotNull
+    private Long vendorId;
+
+    @Min(1)
+    private int quantity;
+
+    @NotNull
+    private BigDecimal unitPrice;
+
+}

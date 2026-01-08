@@ -75,10 +75,10 @@
         <tbody>
           <tr *ngFor="let order of orders">
             <td>{{order.id}}</td>
-            <td>{{order.customer}}</td>
-            <td>{{order.date}}</td>
-            <td [ngClass]="order.status.toLowerCase()">{{order.status}}</td>
-            <td>{{order.total | currency}}</td>
+            <td>{{order.userName}}</td>
+            <td>{{order.items}}</td>
+            <td [ngClass]="order.orderStatus">{{order.orderStatus}}</td>
+            <td>{{order.totalPrice| currency}}</td>
           </tr>
         </tbody>
       </table>
@@ -88,7 +88,7 @@
     <section *ngIf="activeTab==='products'" class="tab-content products-tab">
       <div class="product-header">
         <h2>Products</h2>
-        <button (click)="openModal()">+ Add Product</button>
+        <button routerLink="/adminLayout/adminProductForm">+ Add Product</button>
       </div>
       <table class="products-table">
         <thead>
@@ -107,7 +107,7 @@
             <td>{{product.stockQuantity}}</td>
             <td [ngClass]="product.status?.toLowerCase">{{product.status}}</td>
             <td>
-              <button (click)="editProduct(product)">Edit</button>
+              <button [routerLink]="['/adminLayout/adminEditProductForm', product.id]">Edit</button>
               <button (click)="deleteProduct(product)">Delete</button>
             </td>
           </tr>

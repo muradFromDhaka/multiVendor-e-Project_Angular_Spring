@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { VendorRequest, VendorResponse } from '../models/vendor.model';
+import { OrderItemResponse, OrderResponse } from '../models/order.model';
 
 @Injectable({
   providedIn: 'root',
@@ -39,5 +40,15 @@ export class VendorService {
   // Get logged-in user's vendor
   getMyVendor(): Observable<VendorResponse> {
     return this.http.get<VendorResponse>(`${this.baseUrl}/me`);
+  }
+
+  // Logged-in vendor's order items
+  myOrderItems(): Observable<OrderItemResponse[]> {
+    return this.http.get<OrderItemResponse[]>(`${this.baseUrl}/me/order-items`);
+  }
+
+  // Logged-in vendor's orders
+  myOrders(): Observable<OrderResponse[]> {
+    return this.http.get<OrderResponse[]>(`${this.baseUrl}/me/orders`);
   }
 }

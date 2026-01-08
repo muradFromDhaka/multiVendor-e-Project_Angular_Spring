@@ -7,19 +7,20 @@ export enum OrderStatus {
 }
 
 
-export interface OrderItem {
-  productId: number;
+export interface OrderItemResponse {
+  id: number;
   productName: string;
-  vendorId: number;
-  vendorName: string;
-  quantity: number;
   unitPrice: number;
+  quantity: number;
+  subTotal: number;
+  vendorName: string;
 }
 
+
 export interface OrderResponse {
-  orderId: number;
+  id: number;
   userName: string;
-  orderItems: OrderItem[];
   totalPrice: number;
-  orderStatus: OrderStatus;
+  orderStatus: OrderStatus; 
+  items: OrderItemResponse[];  
 }

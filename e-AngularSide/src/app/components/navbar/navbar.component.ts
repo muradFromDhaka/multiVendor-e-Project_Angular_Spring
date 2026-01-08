@@ -69,7 +69,7 @@ export class NavbarComponent implements OnInit{
   }
 
     loadOrders(): void {
-    this.orderService.getUserOrders().subscribe({
+    this.orderService.getMyOrders().subscribe({
       next: res => {
         this.orders = res;
         // this.loading = false;

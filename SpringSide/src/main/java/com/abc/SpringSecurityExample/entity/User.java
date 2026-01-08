@@ -27,7 +27,7 @@ public class User {
     @Column
     private String userLastName;
 
-    @Column
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false, unique = true)
@@ -46,7 +46,7 @@ public class User {
     @Column
     private Boolean accountNonLocked = true;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "userrole",
             joinColumns = @JoinColumn(name = "user_name"),
@@ -81,14 +81,4 @@ public class User {
         this.accountNonLocked = true;
     }
 
-    // Remove @PrePersist and @PreUpdate since you're using @EnableJpaAuditing
-    @PrePersist
-    void createdAt() {
-        this.dateCreated = this.lastUpdated = OffsetDateTime.now();
-    }
-
-    @PreUpdate
-    void updatedAt() {
-        this.lastUpdated = OffsetDateTime.now();
-    }
 }

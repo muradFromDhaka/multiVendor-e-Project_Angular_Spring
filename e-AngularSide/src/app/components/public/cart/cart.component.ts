@@ -95,7 +95,7 @@ checkout() {
     next: order => {
       alert('Order placed successfully!');
       this.cartService.loadCart(); // refresh cart
-      this.router.navigate(['/orderView', order.orderId]); // go to order detail
+      this.router.navigate(['/orderView', order.id]); // go to order detail
     },
     error: err => {
       this.isPlacingOrder = false;

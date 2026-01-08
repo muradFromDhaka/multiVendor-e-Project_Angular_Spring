@@ -1,99 +1,137 @@
 package com.abc.SpringSecurityExample.service;
 
-import com.abc.SpringSecurityExample.DTOs.projectDtos.OrderItemDto;
-import com.abc.SpringSecurityExample.DTOs.projectDtos.OrderResponseDto;
+import com.abc.SpringSecurityExample.DTOs.projectDtos.*;
 import com.abc.SpringSecurityExample.entity.*;
 import com.abc.SpringSecurityExample.enums.OrderStatus;
 import com.abc.SpringSecurityExample.mapper.OrderMapper;
-import com.abc.SpringSecurityExample.repository.CartRepository;
-import com.abc.SpringSecurityExample.repository.OrderRepository;
-import com.abc.SpringSecurityExample.repository.UserRepository;
+import com.abc.SpringSecurityExample.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
-    private final CartRepository cartRepository;
+    private final ProductRepository productRepository;
+    private final VendorRepository vendorRepository;
+    private final VendorService vendorService;
 
-    // Get currently logged-in user
-    private User getCurrentUser() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getName() == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        return userRepository.findById(auth.getName())
+    // -------------------------------
+    // Create Order
+    // -------------------------------
+    @Transactional
+    public OrderResponseDto createOrder(OrderRequestDto request) {
+
+        User user = userRepository.findById(request.getUserName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-    }
 
-    // Create order from current user's cart
-    public OrderResponseDto createOrder(String paymentMethod) {
-        User user = getCurrentUser();
+        List<Product> products = productRepository.findAllById(
+                request.getItems().stream().map(OrderItemRequestDTO::getProductId).toList()
+        );
 
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        List<Vendor> vendors = vendorRepository.findAllById(
+                request.getItems().stream().map(OrderItemRequestDTO::getVendorId).toList()
+        );
 
-        if (cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
-        }
-
-        Order order = new Order();
-        order.setUser(user);
-        order.setOrderStatus(OrderStatus.PENDING);
-        order.setTotalPrice(BigDecimal.ZERO); // init
-
-        // Map cart items to order items
-        List<OrderItem> orderItems = cart.getItems().stream().map(cartItem -> {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(cartItem.getProduct());
-            orderItem.setVendor(cartItem.getProduct().getVendor());
-            orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setUnitPrice(cartItem.getPrice());
-            return orderItem;
-        }).collect(Collectors.toList());
-
-        order.setOrderItems(orderItems);
-
-        // Calculate total price
-        BigDecimal total = orderItems.stream()
-                .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        order.setTotalPrice(total);
+        Order order = OrderMapper.toOrderEntity(request, user, products, vendors);
 
         orderRepository.save(order);
 
-        // Clear cart
-        cart.getItems().clear();
-        cartRepository.save(cart);
-
-        return OrderMapper.mapOrderToDto(order);
+        return OrderMapper.toOrderResponseDto(order);
     }
 
-    // Get all orders of current user
-    public List<OrderResponseDto> getUserOrders() {
-        User user = getCurrentUser();
-        return orderRepository.findByUser(user).stream()
-                .map(OrderMapper::mapOrderToDto)
-                .collect(Collectors.toList());
-    }
-
-    // Get single order by ID
-    public OrderResponseDto getOrder(Long orderId) {
+    // -------------------------------
+    // Get Order by ID
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public OrderResponseDto getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        return OrderMapper.mapOrderToDto(order);
-    }
-}
 
+        return OrderMapper.toOrderResponseDto(order);
+    }
+
+    // -------------------------------
+    // Get Orders by User
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getOrdersForLoggedInUser() {
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userName)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Order> orders = orderRepository.findByUser(user);
+
+        return orders.stream()
+                .map(OrderMapper::toOrderResponseDto)
+                .toList();
+    }
+
+
+    public List<OrderResponseDto> getOrdersForLoggedInVendor() {
+        Vendor vendor = vendorService.getLoggedInVendor(); // SecurityContextHolder দিয়ে logged-in vendor
+        return orderItemRepository.findOrdersByVendorId(vendor.getId())
+                .stream()
+                .map(OrderMapper::toOrderResponseDto)
+                .toList();
+    }
+
+    public List<OrderItem> getItemsForLoggedInVendor() {
+        Vendor vendor = vendorService.getLoggedInVendor();
+        return orderItemRepository.findByVendor(vendor);
+    }
+
+    public Double getRevenueForLoggedInVendor() {
+        Vendor vendor = vendorService.getLoggedInVendor();
+        return orderItemRepository.findByVendor(vendor)
+                .stream()
+                .mapToDouble(i -> i.getUnitPrice().doubleValue() * i.getQuantity())
+                .sum();
+    }
+
+    // -------------------------------
+    // Get all OrderItems for a Product
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public List<OrderItem> getItemsByProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        return orderItemRepository.findByProduct(product);
+    }
+
+    // -------------------------------
+    // Get all items in a specific Order
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public List<OrderItem> getItemsByOrder(Long orderId) {
+        return orderItemRepository.findByOrderId(orderId);
+    }
+
+    // -------------------------------
+    // Get vendor-specific order items in an order
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public List<OrderItem> getVendorItemsInOrder(Long vendorId, Long orderId) {
+        return orderItemRepository.findByVendorIdAndOrderId(vendorId, orderId);
+    }
+
+    // -------------------------------
+    // Get vendor revenue
+    // -------------------------------
+    @Transactional(readOnly = true)
+    public Double getVendorRevenue(Long vendorId) {
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+        return orderItemRepository.totalRevenueByVendor(vendor);
+    }
+
+
+}
