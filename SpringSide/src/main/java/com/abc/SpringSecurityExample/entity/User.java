@@ -4,8 +4,6 @@ package com.abc.SpringSecurityExample.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.OffsetDateTime;
@@ -54,13 +52,25 @@ public class User {
     )
     private Set<Role> roles;
 
-    @CreatedDate
+//    @CreatedDate
     @Column(nullable = false, updatable = false)
     private OffsetDateTime dateCreated;
 
-    @LastModifiedDate
+//    @LastModifiedDate
     @Column(nullable = false)
     private OffsetDateTime lastUpdated;
+
+    @PrePersist
+    public void prePersist() {
+        this.dateCreated = OffsetDateTime.now();
+        this.lastUpdated = OffsetDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastUpdated = OffsetDateTime.now();
+    }
+
 
     public User(String userName, String email, String password) {
         this.userName = userName;
