@@ -24,12 +24,24 @@ public class Role {
     @Column
     private String roleDescription;
 
-    @CreatedDate
+//    @CreatedDate
     @Column(nullable = false, updatable = false)
     private OffsetDateTime dateCreated;
 
-    @LastModifiedDate
+//    @LastModifiedDate
     @Column(nullable = false)
     private OffsetDateTime lastUpdated;
+
+    @PrePersist
+    public void prePersist() {
+        this.dateCreated = OffsetDateTime.now();
+        this.lastUpdated = OffsetDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastUpdated = OffsetDateTime.now();
+    }
+
 
 }

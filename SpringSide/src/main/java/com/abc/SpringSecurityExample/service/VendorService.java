@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class VendorService {
+public class  VendorService {
 
     private final VendorRepository vendorRepository;
     private final UserRepository userRepository;
